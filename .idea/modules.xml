@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../SH_Browser/.idea/SH_Browser.iml" filepath="$PROJECT_DIR$/../SH_Browser/.idea/SH_Browser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/csomagkezeles.iml" filepath="$PROJECT_DIR$/.idea/csomagkezeles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../meresFeldolgozas/.idea/meresFeldolgozas.iml" filepath="$PROJECT_DIR$/../meresFeldolgozas/.idea/meresFeldolgozas.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../qcpro/.idea/qcpro.iml" filepath="$PROJECT_DIR$/../qcpro/.idea/qcpro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../reszletKereso/.idea/reszletKereso.iml" filepath="$PROJECT_DIR$/../reszletKereso/.idea/reszletKereso.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../scriptek/.idea/scriptek.iml" filepath="$PROJECT_DIR$/../scriptek/.idea/scriptek.iml" />
+    </modules>
+  </component>
+</project>

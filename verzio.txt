@@ -1,0 +1,27 @@
+2018-02-19
+Csomagkezelés 0.1 tesztverzió QGIS plugin 2.x QGIS verziókra:
+- A svájci hozzájárulásos felmérések hátterét biztosító adatbázis átalakított,
+több projektes, mintaterületes, szerepek, szereposztás és formverziók rendszerét
+használó adatbázisra épül.
+- Installálás: a szokásos módon a plugi alkönyvtárba másolva, majd a QGIS
+modulkezelõjével bekapcsolva. A párbeszédablak bekapcsolása a QGIS menûjében:
+Modul/Csomagkezelés/Csomagkezelés.
+- Használatához az adatgyûjtést kiszolgáló adatbázishoz történõ kapcsolat 
+(legalább Csomagkezelõ hozzáférési jogosultság) és a QGIS-ba betöltött
+'epont' és 'csomag' réteg feltétlenül, a 'ppont' és 'mintaterulet' réteg nagyon javasolt.
+- Ha a bekapcsolt plugin talál legalább 'epont' réteget akkor lefolytatható 
+a csomagkészítés.
+- Ha talál 'csomag' réteget is akkor a lefolytatható a csomagtörlés.
+- Mind a készítés, mind a törlés csak a megfelelõ jogosultságok (adatbázisban rögzített)
+meglétére van szükség.
+- Bejelentkezés után a mintaterület és hálósûrûség kiválasztása után a 'pontszûréssel'
+leválogatható, megjeleníthetõ a kezelõ által csomagba rendezhetõ e-pontok halmaza.
+- További beállítások (felmérõ, form verzió, teszt jelleg, task) megadása után 
+generálódnak a csomag és p-pont rekordok.
+- Törléshez egyetlen csomagot kell kiválasztani és kipipálni a 'törlés' jelölõt.
+Csak olyan csomagot lehet törölni, amit a csomagkészítõ állított elõ és még
+nem került kiosztásra a terepi felvételezéshez. A törlési lehetõség elsõdleges
+célja a hibás kiosztások azonnali javítása. Egyszerre törlõdnek a csomag és a 
+csomaghoz tartozó pontok.
+
+
