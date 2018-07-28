@@ -24,4 +24,27 @@ nem került kiosztásra a terepi felvételezéshez. A törlési lehetõség elsõdleges
 célja a hibás kiosztások azonnali javítása. Egyszerre törlõdnek a csomag és a 
 csomaghoz tartozó pontok.
 
+2018-06-10
+Hibajavítás:
+A csomagkezeles_dockwidget.py minden rétegekre feltette a geometria típus kérdést, ezért hibával leállt az 
+inícializálási folyamat, ha volt bennt raszter, vagy openlayers réteg
 
+2018-07-26
+Új eszköz: a kiválasztott csomag objektum paraméterei alapján elkészíti a terepi munkához szükséges állományokat:
+    • sqlite adatbázis
+    • waypointokat tartalmazó gpx fájl
+    • Garmin gpi fájl a pontokra navigálás segítéséhez
+    • tömörített adatbázis a Forestdatacollect alkalmazáshoz
+    • xml elem a csomag adataival, a tömörített fájl md5 kódjával
+Végrehajtja a generálás eredményeinek adatbázis adminisztrációját. 
+Az eszköz segítségével a fájlok többször is újra generálhatók. Az adatbázisban egy új »csomag_gen« tábla tartalmazza az egyes generálásái eseményeket, melyek a »csomag_log« táblához kapcsolódnak. A »csomag_log« csak az elsõ generálás eseményeit rögzíti. A terepi munkát követõ adatbetöltés során a továbbiakban is csak egy ellenõrzött betöltésre lesz lehetõség. A korábban már létezett táblák módosítására nincs szükség.
+A »Csomag fájlok generálása« gombra kattintás után:
+    1. Az alkalmazás ellenõrzi, hogy a csomag fájlok már generálásra kerültek-e? Ha igen akkor a folytatáshoz megerõsítést kér. 
+    2. Fájlablakot nyit a generálásra kerülõ adatok mentési könyvtárának megjelöléséhez. A felhasználó által megadott könyvtárban létrehozza a felmérõ 6 karakteres azonosítójával azonos nevû könytárat. Ebbe a könyvtárba menti a létrehozott fájlokat. Ugyanazon felmérõnek másik csomag generálása, ha a korábbival megegyezõ mentési könyvtárat adunk meg, akkor ugyanbba az alkönyvtárba történik.
+    3. Elkészíti a fájlokat és elvégzi az adatbázis adminisztrációt.
+
+2018-07-28
+Új eszköz: a betöltésre kerülõ adatbázis, vagy tömörített adatbázis kiválasztását teszi lehetõvé.
+A kiválasztott tömörített fájl mellett létrehoz egy 'unzip' foldert, abba bontja ki a zip tartalmát.
+A betöltést végrehajtó script még nincs készen.
+Hibajav: MAC-en ascii hibát generáló parancssori üzeneteket szüntettem meg, írtam át angolra.
