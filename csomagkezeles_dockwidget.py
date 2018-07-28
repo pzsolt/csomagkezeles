@@ -27,6 +27,9 @@ from PyQt4.QtCore import pyqtSignal, pyqtSlot
 from PyQt4.QtCore import pyqtSignature
 from qgis._core import *
 import qgis.utils
+import csomag_generate
+# import csomag_import
+import zipfile
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'csomagkezeles_dockwidget_base.ui'))
 LOGIN_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'login_dialog_base.ui'))
@@ -74,6 +77,7 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.pushPontszures.setEnabled(False)
         self.pushCsomagkeszites.setEnabled(False)
         self.pushCsomagtorles.setEnabled(False)
+        self.pushFileGeneralas.setEnabled(False)
 
     def setDefaultChecks(self):
         self.radio70.setChecked(True)
@@ -129,15 +133,15 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
                         if field.name()[:6] == 'csomag' and field.name()[7:]=='nev' and field.typeName() == 'character':
                             csomOK += 1
 
-            if layer.geometryType() == 0:
-                #print layer.geometryType(), layer.name(),'epontOK: ' + str(epontOK)
-                if epontOK == 3:
-                    eLyr = layer
-                    qgis.utils.iface.setActiveLayer(layer)
-            elif layer.geometryType() == 2:
-                #print layer.geometryType(), layer.name(),'csomOK: ' + str(csomOK)
-                if csomOK == 1:
-                    csLyr = layer
+                if layer.geometryType() == 0:
+                    #print layer.geometryType(), layer.name(),'epontOK: ' + str(epontOK)
+                    if epontOK == 3:
+                        eLyr = layer
+                        qgis.utils.iface.setActiveLayer(layer)
+                elif layer.geometryType() == 2:
+                    #print layer.geometryType(), layer.name(),'csomOK: ' + str(csomOK)
+                    if csomOK == 1:
+                        csLyr = layer
 
         #print 'E layer: ',self.eLayer
         #print 'CS layer: ', self.csLayer
@@ -167,6 +171,7 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
             self.checkTorles.setChecked(False)
             self.frameDelete.setEnabled(False)
             self.pushCsomagtorles.setEnabled(False)
+            self.pushFileGeneralas.setEnabled(False)
         elif self.csLayer is None and not csLyr is None:
             self.csLayer = csLyr
             self.pushBejelentkezes.setEnabled(True)
@@ -266,6 +271,7 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # a vektor réteg a típus enumeráció nulladik eleme
             if layer.type() == 0 and layer.name() == 'epont':
                 self.linePontok.setText(str(len(layer.selectedFeatures())))
+                self.elist = []
                 if len(layer.selectedFeatures()) > 0:
                     eazonx = layer.fieldNameIndex('epont_azon')
                     if eazonx != -1:
@@ -294,14 +300,17 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
                         print self.selCsomagNev, self.selCsomagAzon
                         self.lineSelCsomag.setText(u'%s - %s' % (self.selCsomagNev, str(self.selCsomagAzon)))
                         self.checkTorles.setEnabled(True)
+                        self.pushFileGeneralas.setEnabled(True)
 
                 elif len(layer.selectedFeatures()) > 1:
-                    QtGui.QMessageBox.warning(None, u"Csomagtörlés", u"Egyszerre csak egy csomag választható ki törlésre.")
+                    QtGui.QMessageBox.warning(None, u"Csomag műveletek", u"Egyszerre csak egy csomag választható ki műveletre.")
                     self.checkTorles.setEnabled(False)
+                    self.pushFileGeneralas.setEnabled(False)
                     return
                 else:
                     self.lineSelCsomag.setText('')
                     self.checkTorles.setEnabled(False)
+                    self.pushFileGeneralas.setEnabled(False)
 
     def onSelectedPontokChanged(self, numtext):
         if numtext <> '' and not numtext is None:
@@ -486,6 +495,7 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
                     self.selCsomagAzon = None
                     self.lineSelCsomag.setText('')
                     self.checkTorles.setChecked(False)
+                    self.pushFileGeneralas.setEnabled(False)
                     ppont_deleted = 0
                     self.refresh_layers()
                     return
@@ -494,10 +504,82 @@ class CsomagkezelesDockWidget(QtGui.QDockWidget, FORM_CLASS):
                     return
             else:
                 if qDeleteCsomag.lastError().type() != 0:
-                    QtGui.QMessageBox.warning(None, "Hiba:", "Hiba típus: %s" % str(qDeleteCsomag.lastError().text()))
+                    QtGui.QMessageBox.warning(None, u"Hiba:", u"Hiba típus: %s" % str(qDeleteCsomag.lastError().text()))
                     return
         else:
             QtGui.QMessageBox.warning(None, u"Csomagtörlés", u"Nincs bejelentkezett Csomagkészítő!")
+
+    @pyqtSignature("")
+    def on_pushFileGeneralas_clicked(self):
+        if not self.keszito is None:
+            general = False
+            queryGenerated = QtSql.QSqlQuery()
+            siker = queryGenerated.exec_("""SELECT allapot FROM csomag WHERE csomag_azon = %s;""" % (str(self.selCsomagAzon)))
+            if siker:
+                if queryGenerated.size() > 0:
+                    while queryGenerated.next():
+                        if queryGenerated.value(0):
+                            dontes = QtGui.QMessageBox.question(self, u'File Generálás', u"A csomaghoz tartozó fájlokat már létrehozták. Újra kívánod generálni őket?",
+                                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+                            if dontes == QtGui.QMessageBox.Yes:
+                                general = True
+                            print general
+                        else:
+                            general = True
+                else:
+                    QtGui.QMessageBox.warning(None, u"File Generálás", u"Hiányzó csomag rekord.")
+                    return
+            else:
+                if queryGenerated.lastError().type() != 0:
+                    QtGui.QMessageBox.warning(None, u"Hiba:", u"Hiba típus: %s" % str(queryGenerated.lastError().text()))
+                    return
+
+            if general:
+                genfolder = str(QtGui.QFileDialog.getExistingDirectory(self, u"Válassz könyvtárt", "d:\SH", QtGui.QFileDialog.ShowDirsOnly))
+                if genfolder:
+                    print genfolder.replace('\\','/')
+                    print self.selCsomagAzon, genfolder
+                    csomag_generate.generator(self.selCsomagAzon, genfolder.replace('\\','/'), self.keszito)
+                else:
+                    print 'not yet'
+                    return
+
+        else:
+            QtGui.QMessageBox.warning(None, u"File Generálás", u"Nincs bejelentkezett Csomagkészítő!")
+            return
+
+    @pyqtSignature("")
+    def on_pushDataImport_clicked(self):
+        """Adatbazis, vagy tomoritett adatbazis kivalasztasa.
+           ZIP eseten a fajl mellett letrehozasra kerulo >unzip<
+           folderbe tortenik a tomoritett tartalom kicsomagolasa.
+           Sikeres muvelet atadja az adatbazis elerest a
+           csomag_import.check_sqlite function szamara"""
+        sourceFile = str(QtGui.QFileDialog.getOpenFileName(self, u"Válassz adatcsomag fájlt", "d:\SH", u"SQLite adatbázis (*.db);;Tömörített adatbázis (*.zip)"))
+        if os.path.isfile(sourceFile):
+            dataFolder = os.path.dirname(sourceFile)
+            dataFile = os.path.basename(sourceFile)
+            sourceParts = dataFile.split('.')
+            if sourceParts[1] == 'zip':
+                if not os.path.exists(dataFolder + '/unzip'):
+                    os.makedirs(dataFolder + '/unzip')
+                if os.path.isdir(dataFolder + '/unzip'):
+                    with zipfile.ZipFile(sourceFile, "r") as z:
+                        z.extractall(dataFolder + '/unzip/')
+                    if os.path.isfile(dataFolder + '/unzip/' + sourceParts[0] + '/' + sourceParts[0] + '.db'):
+                        dataFolder = dataFolder + '/unzip/' + sourceParts[0]
+                        dataFile = sourceParts[0] + '.db'
+                    else:
+                        QtGui.QMessageBox.warning(None, u"Adatbetöltés", u"Sikertelen kicsomagolás.")
+                        return
+                else:
+                    QtGui.QMessageBox.warning(None, u"Adatbetöltés", u"Unzip folder létrehozása sikertelen.")
+                    return
+            #csomag_import.check_sqlite(dataFolder, dataFile)
+
+        else:
+            print 'None real file!'
+            return
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
@@ -525,9 +607,11 @@ class LoginDialog(QtGui.QDialog, LOGIN_CLASS):
         self.comboPort.addItem("5432")
         self.comboPort.addItem("5433")
         self.comboDB.addItem(u"shteszt")
+        self.comboDB.addItem(u"nperdok")
+        self.comboDB.addItem(u"erdorezervatum")
         self.comboDB.addItem(u"csomagkezeles")
-        self.uiFelhasznalo.setText("")
-        self.uiJelszo.setText("")
+        self.uiFelhasznalo.setText("turbod")
+        self.uiJelszo.setText("paxman")
         self.csomagkeszito = None
         self.mintateruletek = []
 
