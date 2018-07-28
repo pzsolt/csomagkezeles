@@ -610,8 +610,8 @@ class LoginDialog(QtGui.QDialog, LOGIN_CLASS):
         self.comboDB.addItem(u"nperdok")
         self.comboDB.addItem(u"erdorezervatum")
         self.comboDB.addItem(u"csomagkezeles")
-        self.uiFelhasznalo.setText("turbod")
-        self.uiJelszo.setText("paxman")
+        self.uiFelhasznalo.setText("")
+        self.uiJelszo.setText("")
         self.csomagkeszito = None
         self.mintateruletek = []
 
